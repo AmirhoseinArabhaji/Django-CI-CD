@@ -16,12 +16,11 @@ import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-CURRENT_DIR = Path(__file__).resolve().parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-env_file = CURRENT_DIR / '.env'
+env_file = BASE_DIR / '.env'
 env = environ.Env()
 env.read_env(env_file)
 
