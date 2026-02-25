@@ -17,6 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+
+def ping_view(request):
+    from django.http import JsonResponse
+    return JsonResponse({'message': 'pong'})
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('ping/', ping_view, name='ping'),
 ]
