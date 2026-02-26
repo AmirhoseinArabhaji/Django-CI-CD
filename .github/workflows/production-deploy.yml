@@ -78,4 +78,4 @@ jobs:
             docker compose up -d --remove-orphans
             
             # 6. Clean up old unused images to save disk space
-            docker image prune -a -f
+            docker image prune -f
