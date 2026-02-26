@@ -5,7 +5,6 @@ on:
     branches: [ "main" ]
 
 env:
-  # Replace this with your GitHub username (lowercase) and repo name
   IMAGE_NAME: ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
 
 jobs:
@@ -38,6 +37,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code (Needed for copying files)
+        uses: actions/checkout@v4
+
+      - name: Clean up unnecessary files before copying
+        run: |
+          rm -rf .git
+          rm -rf .github
+          # You can add other things here if you want, like: rm -rf tests
+
+      - name: Copy entire repository to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USERNAME }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          # The "." tells it to copy EVERY file and folder from GitHub
+          source: "."
+          target: ${{ vars.DEPLOY_PATH }}
+
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -45,34 +63,25 @@ jobs:
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
-            # Exit immediately if a command exits with a non-zero status
             set -e
             
-            # 1. Login to GitHub Registry on the server
+            # 1. Go to your project directory
+            cd ${{ vars.DEPLOY_PATH }}
+            
+            # 2. Login to GitHub Registry on the server
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # 2. Pull the new image
-            docker pull ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
-            
-            # 3. Stop old container
+            # 3. CRITICAL: Kill the old standalone container so it releases port 8000!
+            # We temporarily disable strict errors (set +e) so it doesn't fail if the container is already gone.
             set +e
-            docker stop django-app || true
-            docker rm django-app || true
+            docker rm -f django-app || true
             set -e
             
-            # 4. Run new container (Mapping the SQLite DB to a volume!)
-            # We map port 8000 on the host to 8000 in the container
-            docker run -d \
-              --name django-app \
-              --restart unless-stopped \
-              -p 127.0.0.1:8000:8000 \
-              -v /home/amirhosein/p/Django-CI-CD/db.sqlite3:/app/db.sqlite3 \
-              -v /home/amirhosein/p/Django-CI-CD/staticfiles:/app/staticfiles \
-              --env-file /home/amirhosein/p/Django-CI-CD/.env \
-              ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
+            # 4. Pull the absolute newest image defined in docker-compose.yml
+            docker compose pull
             
-            # 5. gather all the static files into the volume
-            docker exec django-app python manage.py collectstatic --noinput
+            # 5. Start/Update the containers (Database and Web)
+            docker compose up -d --remove-orphans
             
-            # 6. Clean up
+            # 6. Clean up old unused images to save disk space
             docker image prune -f

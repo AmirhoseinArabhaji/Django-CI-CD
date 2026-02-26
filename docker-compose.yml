@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # This is a one-time setup worker that runs migrations and collects static files.
+  setup:
+    image: ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./staticfiles:/app/staticfiles
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput"
+
+  web:
+    image: ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
+    restart: always
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: db
+    depends_on:
+      # Wait for the setup worker to finish completely before starting!
+      setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./staticfiles:/app/staticfiles
+    # Now web only has ONE job: run the server.
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 djangoCICD.wsgi:application
+
+volumes:
+  postgres_data:
