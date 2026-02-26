@@ -1,6 +1,8 @@
 .venv/
 venv/
 .env
+.env.example
 __pycache__/
 .git/
 *.sqlite3
+docker-compose*.yml
