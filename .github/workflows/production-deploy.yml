@@ -68,7 +68,7 @@ jobs:
               -p 127.0.0.1:8000:8000 \
               -v /home/amirhosein/p/Django-CI-CD/db.sqlite3:/app/db.sqlite3 \
               --env-file /home/amirhosein/p/Django-CI-CD/.env \
-              ghcr.io/amirhoseinarabhaji/Django-CI-CD:latest
+              ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
             
             # 5. Clean up
             docker image prune -f
