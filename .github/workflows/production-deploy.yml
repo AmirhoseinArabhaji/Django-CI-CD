@@ -67,8 +67,12 @@ jobs:
               --restart unless-stopped \
               -p 127.0.0.1:8000:8000 \
               -v /home/amirhosein/p/Django-CI-CD/db.sqlite3:/app/db.sqlite3 \
+              -v /home/amirhosein/p/Django-CI-CD/staticfiles:/app/staticfiles \
               --env-file /home/amirhosein/p/Django-CI-CD/.env \
               ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
             
-            # 5. Clean up
+            # 5. gather all the static files into the volume
+            docker exec django-app python manage.py collectstatic --noinput
+            
+            # 6. Clean up
             docker image prune -f
