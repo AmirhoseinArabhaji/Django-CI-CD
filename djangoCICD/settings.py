@@ -78,9 +78,9 @@ WSGI_APPLICATION = 'djangoCICD.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('POSTGRES_DB', default='django_db'),
-        'USER': env('POSTGRES_USER', default='django_user'),
-        'PASSWORD': env('POSTGRES_PASSWORD', default='django_password'),
+        'NAME': env('POSTGRES_DB', default='postgres_db'),
+        'USER': env('POSTGRES_USER', default='postgres_user'),
+        'PASSWORD': env('POSTGRES_PASSWORD', default='postgres_password'),
         'HOST': env('POSTGRES_HOST', default='localhost'),
         'PORT': env('POSTGRES_PORT', default='5432'),
     }
