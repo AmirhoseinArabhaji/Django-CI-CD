@@ -45,6 +45,9 @@ jobs:
           username: ${{ secrets.HETZNER_USERNAME }}
           key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
+            # Exit immediately if a command exits with a non-zero status
+            set -e
+            
             # 1. Login to GitHub Registry on the server
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
@@ -52,8 +55,10 @@ jobs:
             docker pull ghcr.io/amirhoseinarabhaji/django-ci-cd:latest
             
             # 3. Stop old container
+            set +e
             docker stop django-app || true
             docker rm django-app || true
+            set -e
             
             # 4. Run new container (Mapping the SQLite DB to a volume!)
             # We map port 8000 on the host to 8000 in the container
