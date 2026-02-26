@@ -40,6 +40,12 @@ jobs:
       - name: Checkout code (Needed for copying files)
         uses: actions/checkout@v4
 
+      - name: Clean up unnecessary files before copying
+        run: |
+          rm -rf .git
+          rm -rf .github
+          # You can add other things here if you want, like: rm -rf tests
+
       - name: Copy entire repository to server
         uses: appleboy/scp-action@master
         with:
