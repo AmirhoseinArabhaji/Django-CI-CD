@@ -48,7 +48,7 @@ jobs:
           key: ${{ secrets.HETZNER_SSH_KEY }}
           # The "." tells it to copy EVERY file and folder from GitHub
           source: "."
-          target: "/home/amirhosein/p/Django-CI-CD/"
+          target: ${{ vars.DEPLOY_PATH }}
 
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -60,7 +60,7 @@ jobs:
             set -e
             
             # 1. Go to your project directory
-            cd /home/amirhosein/p/Django-CI-CD
+            cd ${{ vars.DEPLOY_PATH }}
             
             # 2. Login to GitHub Registry on the server
             echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
